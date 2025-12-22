@@ -1,0 +1,3 @@
+loguru==0.7.3
+numpy==2.4.0
+stormpy==1.11.3

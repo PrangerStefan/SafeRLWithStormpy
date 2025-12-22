@@ -3,7 +3,7 @@ import stormpy
 import sys
 
 
-prism_program = stormpy.parse_prism_program(f"./die.prism")
+prism_program = stormpy.parse_prism_program(f"./die_in_class.prism")
 print("="*80)
 print(f"Input")
 print("="*80)

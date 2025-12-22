@@ -1,0 +1,96 @@
+mdp
+
+// Probability of moving in the right direction
+const double succ = 0.8;
+// Probability of moving in the **opposite* direction
+const double back = 0.10;
+// Probability of moving in an orthogonal direction
+const double fail = 1/2 * (1 - (succ + back));
+
+
+const int WIDTH  = 20;
+const int HEIGHT = 14;
+
+// Border Walls
+formula border = (x=1) | (x=WIDTH) | (y=1) | (y=HEIGHT);
+
+const int WS_1_X = 3;
+const int WS_1_Y1= 1;
+const int WS_1_Y2= 5;
+
+const int WS_2_X1= 6;
+const int WS_2_X2= 8;
+const int WS_2_Y = 3;
+
+const int WS_3_X1= 5;
+const int WS_3_X2= 8;
+const int WS_3_Y = 6;
+
+// Attempted moves
+formula xE = x+1;
+formula xW = x-1;
+formula yS = y+1;
+formula yN = y-1;
+
+// Directional wall checks (evaluate wall structure at target coordinate)
+formula wall_at_E = (xE=1) | (xE=WIDTH) | (y=1)  | (y=HEIGHT)
+                  | ((xE=WS_1_X) & (WS_1_Y1<=y) & (y<=WS_1_Y2))  // copy this to create another vertical wall
+                  | ((WS_2_X1<=xE) & (xE<=WS_2_X2) & (y=WS_2_Y)) // copy this to create another horizontal wall
+                  | ((WS_3_X1<=xE) & (xE<=WS_3_X2) & (y=WS_3_Y))
+                    ;
+formula wall_at_W = (xW=1) | (xW=WIDTH) | (y=1)  | (y=HEIGHT)
+                  | ((xW=WS_1_X) & (WS_1_Y1<=y) & (y<=WS_1_Y2))
+                  | ((WS_2_X1<=xW) & (xW<=WS_2_X2) & (y=WS_2_Y))
+                  | ((WS_3_X1<=xW) & (xW<=WS_3_X2) & (y=WS_3_Y))
+                    ;
+formula wall_at_S = (x=1)  | (x=WIDTH)  | (yS=1) | (yS=HEIGHT)
+                  | ((x=WS_1_X) & (WS_1_Y1<=yS) & (yS<=WS_1_Y2))
+                  | ((WS_2_X1<=x) & (x<=WS_2_X2) & (yS=WS_2_Y))
+                  | ((WS_3_X1<=x) & (x<=WS_3_X2) & (yS=WS_3_Y))
+                    ;
+
+
+formula wall_at_N = (x=1)  | (x=WIDTH)  | (yN=1) | (yN=HEIGHT)
+                  | ((x=WS_1_X) & (WS_1_Y1<=yN) & (yN<=WS_1_Y2))
+                  | ((WS_2_X1<=x) & (x<=WS_2_X2) & (yN=WS_2_Y))
+                  | ((WS_3_X1<=x) & (x<=WS_3_X2) & (yN=WS_3_Y))
+                    ;
+
+
+// Position of any lava
+//formula lava1 = x=3 & (y>1 & y<HEIGHT-5);
+formula lava1 = y=HEIGHT-1 & mod(x,2)=1 & x<WIDTH-1;
+formula lava2 = (10<=x & x<=15) & (3<=y & y<=6);
+formula lava3 = x=5 & (y>1 & y<HEIGHT-5 & mod(y,2) = 1);
+formula lava = lava1 | lava2 | false;
+// Turn off lava
+//formula lava = false;
+label "lava" = lava;
+
+formula slippery = !lava & (y>2 & y<HEIGHT-1);
+label "slippery" = slippery;
+
+formula moveEast  = wall_at_E ? x : xE;
+formula moveWest  = wall_at_W ? x : xW;
+formula moveSouth = wall_at_S ? y : yS;
+formula moveNorth = wall_at_N ? y : yN;
+
+formula goal = x=WIDTH-1 & y=HEIGHT-1;
+label "goal" = goal;
+
+formula done = lava | goal;
+
+module agent
+  x : [1..WIDTH]  init 2;
+  y : [1..HEIGHT] init 2;
+
+  [moveEast]  !done & !slippery -> (x' = moveEast)  & (y' = y);
+  [moveWest]  !done & !slippery -> (x' = moveWest)  & (y' = y);
+  [moveSouth] !done & !slippery -> (x' = x)         & (y' = moveSouth);
+  [moveNorth] !done & !slippery -> (x' = x)         & (y' = moveNorth);
+
+  [moveEast]  !done & slippery -> succ: (x'=moveEast) + fail:(y'=moveNorth) + fail:(y'=moveSouth) + back: (x'=moveWest);
+  [moveWest]  !done & slippery -> succ: (x'=moveWest) + fail:(y'=moveNorth) + fail:(y'=moveSouth) + back: (x'=moveEast);
+  [moveSouth] !done & slippery -> succ: (y'=moveSouth) + fail:(x'=moveEast) + fail:(x'=moveWest)  + back: (y'=moveNorth);
+  [moveNorth] !done & slippery -> succ: (y'=moveNorth) + fail:(x'=moveEast) + fail:(x'=moveWest)  + back: (y'=moveSouth);
+endmodule

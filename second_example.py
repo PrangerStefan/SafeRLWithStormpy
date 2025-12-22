@@ -5,7 +5,7 @@ from stormpy.examples import files
 import sys
 
 
-prism_program = stormpy.parse_prism_program(f"./die.prism")
+prism_program = stormpy.parse_prism_program(f"./die_in_class.prism")
 
 formula_str = "P=? [F (\"two\" | \"four\" | \"six\")];"
 
