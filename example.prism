@@ -3,7 +3,7 @@ mdp
 // Probability of moving in the right direction
 const double succ = 0.8;
 // Probability of moving in the **opposite* direction
-const double back = 0.10;
+const double back = 0.00;
 // Probability of moving in an orthogonal direction
 const double fail = 1/2 * (1 - (succ + back));
 
